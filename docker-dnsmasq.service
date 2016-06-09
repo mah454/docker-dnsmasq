@@ -1,6 +1,7 @@
 [Unit]
 Description=Docker DNSMasq Service
 After=network.target dnsmasq.service docker.service
+Requires=network.target dnsmasq.service docker.service
 
 [Service]
 EnvironmentFile=
