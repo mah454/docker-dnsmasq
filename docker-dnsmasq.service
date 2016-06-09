@@ -1,0 +1,16 @@
+[Unit]
+Description=Docker DNSMasq Service
+After=network.target dnsmasq.service docker.service
+
+[Service]
+EnvironmentFile=
+ExecStart=/usr/local/sbin/docker-dnsmasq
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartPreventExitStatus=255
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+Alias=docker-dnsmasq.service

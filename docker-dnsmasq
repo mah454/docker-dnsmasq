@@ -1,0 +1,35 @@
+#!/usr/bin/python3 
+
+import json 
+import urllib3 
+import time
+import re
+import sys
+from subprocess import call
+
+http = urllib3.PoolManager()
+
+def writeFile(fileName, content) :
+    f = open(fileName, 'w')
+    f.write(content)
+    f.close
+
+def main () :
+    while True :
+        r = http.request('GET',  'http://127.0.0.1:4322/containers/json')
+        if r.status == 200 :
+            time.sleep(1)
+            jsonObject = json.loads(r.data.decode("utf-8"))
+            lines = ""
+            for container in range(len(jsonObject)) :
+                cName = jsonObject[container]["Names"][0].replace("/", "")
+                cIPAddress = jsonObject[container]["NetworkSettings"]["Networks"]["bridge"]["IPAddress"]
+                lines += cIPAddress + "\t" + cName+"\n"
+                
+                
+            writeFile("/etc/hosts.docker", lines)
+            call(["service", "dnsmasq", "reload"])
+
+
+if __name__ == '__main__' :
+    main()
