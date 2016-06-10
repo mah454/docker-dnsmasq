@@ -5,6 +5,7 @@ import urllib3
 import time
 import re
 import sys
+import hashlib
 from subprocess import call
 
 http = urllib3.PoolManager()
@@ -14,22 +15,27 @@ def writeFile(fileName, content) :
     f.write(content)
     f.close
 
-def main () :
+
+
+def setupDNS () :
+    secondHash = ""
     while True :
         r = http.request('GET',  'http://127.0.0.1:4322/containers/json')
+        lines = ""
         if r.status == 200 :
             time.sleep(1)
             jsonObject = json.loads(r.data.decode("utf-8"))
-            lines = ""
             for container in range(len(jsonObject)) :
                 cName = jsonObject[container]["Names"][0].replace("/", "")
                 cIPAddress = jsonObject[container]["NetworkSettings"]["Networks"]["bridge"]["IPAddress"]
                 lines += cIPAddress + "\t" + cName+"\n"
-                
-                
-            writeFile("/etc/hosts.docker", lines)
-            call(["service", "dnsmasq", "reload"])
 
+
+            firstHash = hashlib.md5(lines.encode('utf-8')).hexdigest()
+            if firstHash != secondHash :
+                writeFile("/etc/hosts.docker", lines)
+                call(["service", "dnsmasq", "reload"])
+                secondHash = firstHash
 
 if __name__ == '__main__' :
-    main()
+    setupDNS()
